@@ -21,9 +21,6 @@
         h1 {
             color: #333;
         }
-        #puzzle {
-            margin-top: 20px;
-        }
         #welcome-message {
             font-size: 1.5em;
             color: #4CAF50;
@@ -36,13 +33,40 @@
             display: inline-block;
             background-size: cover;
             cursor: pointer;
+            position: relative;
         }
+        /* Animacija širdelėms */
+        .heart {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5em;
+            color: red;
+            animation: heart-beat 1s infinite;
+        }
+
+        @keyframes heart-beat {
+            0% {
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                transform: translateX(-50%) scale(1.2);
+            }
+            100% {
+                transform: translateX(-50%) scale(1);
+            }
+        }
+
         .puzzle-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             max-width: 400px;
             margin: 0 auto;
+        }
+        .puzzle-piece.over {
+            border: 2px dashed #4CAF50;
         }
     </style>
 </head>
@@ -52,7 +76,7 @@
     <h1 id="welcome-message">Sveika, Nijole! Pasiruošk žaisti Puzzle žaidimą!</h1>
 
     <!-- Nuotrauka, kuri bus naudojama kaip žaidimo pagrindas -->
-    <img src="Mama6.jpg" alt="Puzzle Image" id="puzzle-image" style="display:none">
+    <img src="Mama2.jpg" alt="Puzzle Image" id="puzzle-image" style="display:none">
 
     <!-- Žaidimo dėlionės dalys -->
     <div id="puzzle" class="puzzle-container">
@@ -60,21 +84,17 @@
     </div>
 
     <script>
-        // Paveikslėlio šaltinis
-        const imageSrc = "Mama6.jpg";
+        const imageSrc = "Mama2.jpg";
         
-        // Pakeisti dėlionės dydį pagal ekrano plotį
         const puzzleImage = document.getElementById('puzzle-image');
         
         puzzleImage.onload = function() {
-            // Sukuriame dėlionę iš paveikslėlio
             const puzzleContainer = document.getElementById('puzzle');
-            const rows = 3; // Pavyzdžiui, 3 eilutės
-            const cols = 3; // 3 stulpeliai
+            const rows = 3; 
+            const cols = 3; 
             const pieceWidth = puzzleImage.width / cols;
             const pieceHeight = puzzleImage.height / rows;
 
-            // Atvaizduojame kiekvieną dalį
             let pieces = [];
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
@@ -85,39 +105,66 @@
                     piece.dataset.row = row;
                     piece.dataset.col = col;
                     piece.setAttribute('draggable', 'true');
+
+                    // Pridedam širdutę viršuje
+                    const heart = document.createElement('div');
+                    heart.className = 'heart';
+                    heart.innerHTML = '❤️';
+                    piece.appendChild(heart);
+
                     pieces.push(piece);
                     puzzleContainer.appendChild(piece);
                 }
             }
 
-            // Leisti perkelti dėlionės dalis
+            let draggedPiece = null;
+
             puzzleContainer.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text', e.target.dataset.row + ',' + e.target.dataset.col);
+                draggedPiece = e.target;
+                setTimeout(() => {
+                    draggedPiece.style.opacity = '0.5';
+                }, 0);
+            });
+
+            puzzleContainer.addEventListener('dragend', (e) => {
+                draggedPiece.style.opacity = '1';
+                draggedPiece = null;
             });
 
             puzzleContainer.addEventListener('dragover', (e) => {
                 e.preventDefault();
+                e.target.classList.add('over');
+            });
+
+            puzzleContainer.addEventListener('dragleave', (e) => {
+                e.target.classList.remove('over');
             });
 
             puzzleContainer.addEventListener('drop', (e) => {
                 e.preventDefault();
-                const data = e.dataTransfer.getData('text').split(',');
                 const targetPiece = e.target;
-
-                // Įsitikinkime, kad tai yra teisinga dėlionės dalis
                 if (targetPiece.classList.contains('puzzle-piece')) {
-                    const [fromRow, fromCol] = data;
-                    const toRow = targetPiece.dataset.row;
-                    const toCol = targetPiece.dataset.col;
+                    const targetRow = targetPiece.dataset.row;
+                    const targetCol = targetPiece.dataset.col;
 
-                    // Keisti pozicijas (pavyzdžiui, keičiamas stilius)
-                    targetPiece.style.backgroundPosition = `-${fromCol * pieceWidth}px -${fromRow * pieceHeight}px`;
-                    pieces[fromRow * cols + fromCol].style.backgroundPosition = `-${toCol * pieceWidth}px -${toRow * pieceHeight}px`;
+                    // Swap positions of dragged and target pieces
+                    const draggedRow = draggedPiece.dataset.row;
+                    const draggedCol = draggedPiece.dataset.col;
+
+                    // Swap the background positions of the pieces
+                    draggedPiece.style.backgroundPosition = `-${targetCol * pieceWidth}px -${targetRow * pieceHeight}px`;
+                    targetPiece.style.backgroundPosition = `-${draggedCol * pieceWidth}px -${draggedRow * pieceHeight}px`;
+
+                    // Swap the data attributes
+                    draggedPiece.dataset.row = targetRow;
+                    draggedPiece.dataset.col = targetCol;
+                    targetPiece.dataset.row = draggedRow;
+                    targetPiece.dataset.col = draggedCol;
                 }
+                e.target.classList.remove('over');
             });
-        }
+        };
 
-        // Atidaryti žaidimą (po nuotraukos įkėlimo)
         puzzleImage.src = imageSrc;
     </script>
 </body>
