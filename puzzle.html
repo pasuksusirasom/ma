@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Žaidimas</title>
+    <style>
+        /* Pagrindinis žaidimo stilius */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        #welcome-message {
+            font-size: 1.5em;
+            color: #4CAF50;
+        }
+        .puzzle-piece {
+            width: 100px;
+            height: 100px;
+            margin: 5px;
+            border: 2px solid #ddd;
+            display: inline-block;
+            background-size: cover;
+            cursor: pointer;
+            position: relative;
+        }
+        /* Animacija širdelėms */
+        .heart {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5em;
+            color: red;
+            animation: heart-beat 1s infinite;
+        }
+
+        @keyframes heart-beat {
+            0% {
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                transform: translateX(-50%) scale(1.2);
+            }
+            100% {
+                transform: translateX(-50%) scale(1);
+            }
+        }
+
+        .puzzle-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 340px;
+            margin: 0 auto;
+        }
+        .puzzle-piece.over {
+            border: 2px dashed #4CAF50;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pasisveikinimas su Nijole -->
+    <h1 id="welcome-message">Sveika, Nijole! Pasiruošk žaisti Puzzle žaidimą!</h1>
+
+    <!-- Nuotrauka, kuri bus naudojama kaip žaidimo pagrindas (hidden) -->
+    <img src="Mama2.jpg" alt="Puzzle Image" id="puzzle-image" style="display:none">
+
+    <!-- Žaidimo dėlionės dalys -->
+    <div id="puzzle" class="puzzle-container">
+        <!-- Paveikslėlio dalys bus čia generuojamos -->
+    </div>
+
+    <script>
+        const imageSrc = "Mama2.jpg";
+        
+        const puzzleImage = document.getElementById('puzzle-image');
+        
+        puzzleImage.onload = function() {
+            const puzzleContainer = document.getElementById('puzzle');
+            const rows = 3; // 3 eilutės
+            const cols = 3; // 3 stulpeliai
+            const pieceWidth = puzzleImage.width / cols;
+            const pieceHeight = puzzleImage.height / rows;
+
+            let pieces = [];
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const piece = document.createElement('div');
+                    piece.className = 'puzzle-piece';
+                    piece.style.backgroundImage = `url(${imageSrc})`;
+                    piece.style.backgroundPosition = `-${col * pieceWidth}px -${row * pieceHeight}px`;
+                    piece.dataset.row = row;
+                    piece.dataset.col = col;
+                    piece.setAttribute('draggable', 'true');
+
+                    // Pridedam širdutę viršuje
+                    const heart = document.createElement('div');
+                    heart.className = 'heart';
+                    heart.innerHTML = '❤️';
+                    piece.appendChild(heart);
+
+                    pieces.push(piece);
+                    puzzleContainer.appendChild(piece);
+                }
+            }
+
+            let draggedPiece = null;
+
+            puzzleContainer.addEventListener('dragstart', (e) => {
+                draggedPiece = e.target;
+                setTimeout(() => {
+                    draggedPiece.style.opacity = '0.5';
+                }, 0);
+            });
+
+            puzzleContainer.addEventListener('dragend', (e) => {
+                draggedPiece.style.opacity = '1';
+                draggedPiece = null;
+            });
+
+            puzzleContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.target.classList.add('over');
+            });
+
+            puzzleContainer.addEventListener('dragleave', (e) => {
+                e.target.classList.remove('over');
+            });
+
+            puzzleContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const targetPiece = e.target;
+                if (targetPiece.classList.contains('puzzle-piece')) {
+                    const targetRow = targetPiece.dataset.row;
+                    const targetCol = targetPiece.dataset.col;
+
+                    // Swap positions of dragged and target pieces
+                    const draggedRow = draggedPiece.dataset.row;
+                    const draggedCol = draggedPiece.dataset.col;
+
+                    // Swap the background positions of the pieces
+                    draggedPiece.style.backgroundPosition = `-${targetCol * pieceWidth}px -${targetRow * pieceHeight}px`;
+                    targetPiece.style.backgroundPosition = `-${draggedCol * pieceWidth}px -${draggedRow * pieceHeight}px`;
+
+                    // Swap the data attributes
+                    draggedPiece.dataset.row = targetRow;
+                    draggedPiece.dataset.col = targetCol;
+                    targetPiece.dataset.row = draggedRow;
+                    targetPiece.dataset.col = draggedCol;
+                }
+                e.target.classList.remove('over');
+            });
+        };
+
+        puzzleImage.src = imageSrc;
+    </script>
+</body>
+</html>
