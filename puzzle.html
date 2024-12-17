@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Žaidimas</title>
+    <style>
+        /* Pritaikyk nuotrauką žaidimo ekrane */
+        img {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+        }
+        /* Pagrindinis žaidimo stilius */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        #puzzle {
+            margin-top: 20px;
+        }
+        #welcome-message {
+            font-size: 1.5em;
+            color: #4CAF50;
+        }
+        .puzzle-piece {
+            width: 100px;
+            height: 100px;
+            margin: 5px;
+            border: 2px solid #ddd;
+            display: inline-block;
+            background-size: cover;
+            cursor: pointer;
+        }
+        .puzzle-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pasisveikinimas su Nijole -->
+    <h1 id="welcome-message">Sveika, Nijole! Pasiruošk žaisti Puzzle žaidimą!</h1>
+
+    <!-- Nuotrauka, kuri bus naudojama kaip žaidimo pagrindas -->
+    <img src="Mama2.jpg" alt="Puzzle Image" id="puzzle-image" style="display:none">
+
+    <!-- Žaidimo dėlionės dalys -->
+    <div id="puzzle" class="puzzle-container">
+        <!-- Paveikslėlio dalys bus čia generuojamos -->
+    </div>
+
+    <script>
+        // Paveikslėlio šaltinis
+        const imageSrc = "Mama2.jpg";
+        
+        // Pakeisti dėlionės dydį pagal ekrano plotį
+        const puzzleImage = document.getElementById('puzzle-image');
+        
+        puzzleImage.onload = function() {
+            // Sukuriame dėlionę iš paveikslėlio
+            const puzzleContainer = document.getElementById('puzzle');
+            const rows = 3; // Pavyzdžiui, 3 eilutės
+            const cols = 3; // 3 stulpeliai
+            const pieceWidth = puzzleImage.width / cols;
+            const pieceHeight = puzzleImage.height / rows;
+
+            // Atvaizduojame kiekvieną dalį
+            let pieces = [];
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const piece = document.createElement('div');
+                    piece.className = 'puzzle-piece';
+                    piece.style.backgroundImage = `url(${imageSrc})`;
+                    piece.style.backgroundPosition = `-${col * pieceWidth}px -${row * pieceHeight}px`;
+                    piece.dataset.row = row;
+                    piece.dataset.col = col;
+                    piece.setAttribute('draggable', 'true');
+                    pieces.push(piece);
+                    puzzleContainer.appendChild(piece);
+                }
+            }
+
+            // Leisti perkelti dėlionės dalis
+            puzzleContainer.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text', e.target.dataset.row + ',' + e.target.dataset.col);
+            });
+
+            puzzleContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            puzzleContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const data = e.dataTransfer.getData('text').split(',');
+                const targetPiece = e.target;
+
+                // Įsitikinkime, kad tai yra teisinga dėlionės dalis
+                if (targetPiece.classList.contains('puzzle-piece')) {
+                    const [fromRow, fromCol] = data;
+                    const toRow = targetPiece.dataset.row;
+                    const toCol = targetPiece.dataset.col;
+
+                    // Keisti pozicijas (pavyzdžiui, keičiamas stilius)
+                    targetPiece.style.backgroundPosition = `-${fromCol * pieceWidth}px -${fromRow * pieceHeight}px`;
+                    pieces[fromRow * cols + fromCol].style.backgroundPosition = `-${toCol * pieceWidth}px -${toRow * pieceHeight}px`;
+                }
+            });
+        }
+
+        // Atidaryti žaidimą (po nuotraukos įkėlimo)
+        puzzleImage.src = imageSrc;
+    </script>
+</body>
+</html>
